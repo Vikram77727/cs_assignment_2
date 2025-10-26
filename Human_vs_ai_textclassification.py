@@ -52,7 +52,7 @@ else:
 print(f"\nTarget variable unique values: {df_train_essays[target_column].unique()}")
 print(f"Target variable type: {df_train_essays[target_column].dtype}")
 
-# 1️⃣ Prepare classifier
+# 1️ Prepare classifier
 SEQ_LENGTH = 512
 
 preprocessor = keras_nlp.models.DistilBertPreprocessor.from_preset(
@@ -71,7 +71,7 @@ classifier = keras_nlp.models.DistilBertClassifier.from_preset(
     preprocessor=preprocessor,
 )
 
-# 2️⃣ Compile with TensorFlow's Keras optimizer
+# 2️ Compile with TensorFlow's Keras optimizer
 classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),  # Changed to False since we have softmax
     optimizer=keras.optimizers.Adam(learning_rate=5e-4),
@@ -81,7 +81,7 @@ classifier.compile(
 classifier.backbone.trainable = False
 classifier.summary()
 
-# 3️⃣ Train-test split
+# 3️ Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
     df_train_essays["text"],
     df_train_essays[target_column],  # Use the correct target column
@@ -95,7 +95,7 @@ print(f"Test samples: {len(X_test)}")
 print(f"Class distribution in training: {pd.Series(y_train).value_counts().to_dict()}")
 print(f"Class distribution in test: {pd.Series(y_test).value_counts().to_dict()}")
 
-# 4️⃣ Fit model
+# 4️ Fit model
 print("\nTraining the model...")
 try:
     history = classifier.fit(
@@ -121,15 +121,15 @@ except Exception as e:
         verbose=1
     )
 
-# 5️⃣ Evaluate and Calculate Accuracy
+# 5️ Evaluate and Calculate Accuracy
 print("\nMaking predictions...")
 y_pred_test = classifier.predict(X_test)
 y_pred_classes = np.argmax(y_pred_test, axis=1)
 
 # Calculate accuracy
 accuracy = accuracy_score(y_test, y_pred_classes)
-print(f"\n📊 MODEL PERFORMANCE METRICS:")
-print(f"✅ Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
+print(f"\n MODEL PERFORMANCE METRICS:")
+print(f" Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
 
 # Calculate additional metrics
 print(f"\n📋 DETAILED CLASSIFICATION REPORT:")
@@ -156,7 +156,7 @@ def displayConfusionMatrix(y_true, y_pred, dataset):
 
 displayConfusionMatrix(y_test, y_pred_test, "Test")
 
-# 6️⃣ Additional Visualizations
+# 6️ Additional Visualizations
 if 'history' in locals():
     plt.figure(figsize=(15, 5))
     
@@ -183,14 +183,14 @@ if 'history' in locals():
     plt.tight_layout()
     plt.show()
 
-# 7️⃣ Final Summary
-print(f"\n🎯 FINAL MODEL SUMMARY:")
+# 7️ Final Summary
+print(f"\n FINAL MODEL SUMMARY:")
 print(f"Overall Test Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
 print(f"Model successfully classified {len(X_test)} test samples")
 print(f"Number of classes: {num_classes}")
 
-# 8️⃣ Test on sample predictions
-print(f"\n🔍 SAMPLE PREDICTIONS:")
+# 8️ Test on sample predictions
+print(f"\n SAMPLE PREDICTIONS:")
 sample_texts = [
     "This is a sample text to test the model prediction capabilities.",
     "The quick brown fox jumps over the lazy dog in this example sentence."
@@ -201,3 +201,4 @@ for i, text in enumerate(sample_texts):
     predicted_class = np.argmax(prediction, axis=1)[0]
     confidence = np.max(prediction)
     print(f"Sample {i+1}: Predicted class {predicted_class} with confidence {confidence:.4f}")
+
