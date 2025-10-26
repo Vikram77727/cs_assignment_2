@@ -4,8 +4,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import keras_core as keras
 import keras_nlp
-import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
+# 1️ Prepare classifier
 SEQ_LENGTH = 512
 
 preprocessor = keras_nlp.models.DistilBertPreprocessor.from_preset(
@@ -20,16 +22,17 @@ classifier = keras_nlp.models.DistilBertClassifier.from_preset(
     preprocessor=preprocessor,
 )
 
+# 2️ Compile AFTER creating the classifier
 classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.Adam(5e-4),
+    optimizer=keras.optimizers.Adam(learning_rate=5e-4),
     metrics=[keras.metrics.SparseCategoricalAccuracy()]
 )
 
 classifier.backbone.trainable = False
 classifier.summary()
-from sklearn.model_selection import train_test_split
 
+# 3️ Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
     df_train_essays["text"],
     df_train_essays["generated"],
@@ -37,6 +40,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
+# 4️ Fit model
 classifier.fit(
     x=X_train,
     y=y_train,
@@ -44,8 +48,8 @@ classifier.fit(
     epochs=1,
     batch_size=64
 )
-from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
+# 5️ Evaluate
 y_pred_test = classifier.predict(X_test)
 
 def displayConfusionMatrix(y_true, y_pred, dataset):
