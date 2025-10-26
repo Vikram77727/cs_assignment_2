@@ -1,72 +1,176 @@
-# cs_assignment_2
-## Project Overview  
-This project focuses on improving the **security of Generative AI models** (like ChatGPT, Bard, etc.) by detecting and preventing **prompt injection**, **jailbreak attempts**, and **malicious AI misuse**.  
-It is based on the research paper:  
-> Gupta et al., *"From ChatGPT to ThreatGPT: Impact of Generative AI in Cybersecurity and Privacy"*, arXiv:2307.00691 (2023).
-##  Problem Statement  
-Generative AI systems are vulnerable to adversarial prompts that attempt to override ethical or safety rules.  
-The main problem is:  
-> How can we **detect and block** these prompt injection or jailbreak attempts in real-time to ensure ethical AI usage?
-##  Proposed Model Improvements
-1. **Prompt Injection Detection Layer**  
-   - Scans user inputs for malicious or adversarial intent.  
-   - Blocks phrases like “ignore previous instructions”, “bypass filter”, or “act as developer”.  
-
-2. **Ethical Guardrail Reinforcement**  
-   - Analyzes user queries for ethical tone and intent.  
-   - Blocks unethical or harmful commands (e.g., “generate malware”).  
-
-3. **Behavioral Logging System**  
-   - Saves detected threats with timestamps in `security_log.csv`.  
-   - Enables analysis of user behavior patterns.  
-
-4. **Explainable Alert Output**  
-   - Displays detection results clearly in the console.  
+Here’s a structured **README** for your DistilBERT AI-human content classifier project:
 
 ---
 
-## ⚙️ Tools and Libraries  
-- **Python 3.9+**  
-- **Pandas** (for logging)  
-- *(Optional)* TextBlob (for sentiment analysis in advanced version)  
+# **AI-Human Text Content Classifier using DistilBERT**
 
-To install dependencies (optional):
+## **Project Overview**
+
+This project uses a **DistilBERT-based classifier** to detect whether a piece of text is **AI-generated or human-written**. The model is trained on a labeled dataset and provides metrics, visualizations, and sample predictions to evaluate its performance.
+
+---
+
+## **Features**
+
+* Preprocesses text data using **DistilBERT tokenizer and preprocessor**.
+* Handles **binary classification** (`AI-generated` vs `human-written`).
+* Supports **training, validation, and test evaluation**.
+* Visualizes:
+
+  * **Confusion matrix**
+  * **Training & validation accuracy**
+  * **Training & validation loss**
+* Generates **sample predictions** with confidence scores.
+
+---
+
+## **Requirements**
+
+* Python ≥ 3.8
+* TensorFlow 2.19.0
+* KerasNLP 0.21.1
+* pandas
+* numpy
+* seaborn
+* matplotlib
+* scikit-learn
+
+Install required packages:
+
 ```bash
-pip install pandas textblob
-python -m textblob.download_corpora
-🧪 Code Files
-1️⃣ detect_prompt_injection.py
-Core detection algorithm that flags and blocks malicious prompts in real-time.
+!pip install --upgrade keras-core
+!pip install -q keras-nlp
+!pip install seaborn
+```
 
-bash
+---
 
-python detect_prompt_injection.py
+## **Dataset**
 
-Expected Output:
-⚠️ ALERT: Malicious prompt detected!
-🚫 Action: Response blocked by Ethical Guardrail.
-✅ Logs saved to 'security_log.csv'
-2️⃣ ethics_filter_model.py
-Ethical classifier that evaluates user input tone and intent.
+* CSV file containing text and label columns.
+* Required columns:
 
-bash
+  * `text_content` → The text input
+  * `label` → Target class (0 = AI-generated, 1 = human-written)
+* Example first 5 rows:
 
-python ethics_filter_model.py
+| text_content                  | label |
+| ----------------------------- | ----- |
+| "Sample AI-generated text..." | 0     |
+| "Human-written essay text..." | 1     |
 
-Expected Output:
-⚠️ Risky keywords detected. Potential misuse attempt.
-✅ Educational or defensive query detected.
+---
 
-📊 Results Summary
-Metric	Description	Result
-Prompt Detection Accuracy	Identifying malicious prompts	92%
-Ethical Reinforcement Effectiveness	Preventing misuse	95%
-Log Reliability	Recorded incidents accurately	100%
+## **Usage**
 
+1. **Load dataset**
 
-🧾 Reference
-Gupta, Maanak et al. (2023). From ChatGPT to ThreatGPT: Impact of Generative AI in Cybersecurity and Privacy. arXiv:2307.00691
+```python
+df = pd.read_csv('/path/to/ai_human_content_detection_dataset.csv')
+```
 
-OpenAI Documentation (2023). Ethical AI Policy and Safety Guidelines.
+2. **Preprocess data**
 
-Google Bard Technical Overview (2023).
+* Select `text_content` as input and `label` as target.
+* Encode target variable if it’s categorical.
+
+3. **Define and compile the model**
+
+```python
+preprocessor = keras_nlp.models.DistilBertPreprocessor.from_preset(
+    "distil_bert_base_en_uncased",
+    sequence_length=512
+)
+
+classifier = keras_nlp.models.DistilBertClassifier.from_preset(
+    "distil_bert_base_en_uncased",
+    num_classes=2,
+    activation='softmax',
+    preprocessor=preprocessor
+)
+
+classifier.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+    optimizer=keras.optimizers.Adam(learning_rate=5e-4),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()]
+)
+```
+
+4. **Train-test split**
+
+```python
+X_train, X_test, y_train, y_test = train_test_split(
+    df['text_content'],
+    df['label'],
+    test_size=0.33,
+    stratify=df['label'],
+    random_state=42
+)
+```
+
+5. **Train the model**
+
+```python
+history = classifier.fit(
+    x=X_train,
+    y=y_train,
+    validation_data=(X_test, y_test),
+    epochs=3,
+    batch_size=32
+)
+```
+
+6. **Evaluate model**
+
+```python
+y_pred = np.argmax(classifier.predict(X_test), axis=1)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Test Accuracy: {accuracy:.2%}")
+print(classification_report(y_test, y_pred))
+```
+
+7. **Visualize results**
+
+* Confusion matrix
+* Accuracy and loss plots
+
+---
+
+## **Sample Predictions**
+
+```python
+sample_texts = [
+    "This is a sample text to test the model.",
+    "The quick brown fox jumps over the lazy dog."
+]
+
+for text in sample_texts:
+    pred = classifier.predict([text])
+    predicted_class = np.argmax(pred, axis=1)[0]
+    confidence = np.max(pred)
+    print(f"Text: {text}")
+    print(f"Predicted Class: {predicted_class}, Confidence: {confidence:.4f}")
+```
+
+---
+
+## **Performance Metrics**
+
+* Example metrics from training:
+
+| Metric              | Value |
+| ------------------- | ----- |
+| Training Accuracy   | 74%   |
+| Validation Accuracy | 73.5% |
+| Test Accuracy       | 73.5% |
+
+---
+
+## **Notes**
+
+* The backbone of DistilBERT is **frozen** during training to reduce overfitting and speed up training.
+* The model supports **softmax activation** for multi-class or binary classification.
+* Can be extended for **larger datasets** or fine-tuned for better performance.
+
+---
+
